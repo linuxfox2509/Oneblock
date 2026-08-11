@@ -9,14 +9,20 @@ import eu.linuxfox.oneblock.progression.Stage;
 import eu.linuxfox.oneblock.progression.StageManager;
 import eu.linuxfox.oneblock.storage.IslandStorage;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.block.data.type.Leaves;
+import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 import java.util.Collection;
 import java.util.Random;
@@ -51,9 +57,10 @@ public class OneBlockBreakListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
 
         // Check whether the broken block is a registered OneBlock
-        Island island = islandManager.getIslandByOneBlockLocation(
-                event.getBlock().getLocation()
-        );
+        Island island =
+                islandManager.getIslandByOneBlockLocation(
+                        event.getBlock().getLocation()
+                );
 
         // Not a OneBlock -> normal Minecraft behavior
         if (island == null) {
@@ -75,8 +82,15 @@ public class OneBlockBreakListener implements Listener {
         // REWARD CHEST
         // ---------------------------------------------------------
 
-        // Breaking a reward chest does NOT increase island progress
+        /*
+         * Breaking a reward chest does NOT increase island progress.
+         */
         if (island.isRewardChestActive()) {
+
+            Location dropLocation =
+                    getDropLocation(
+                            event.getBlock()
+                    );
 
             // Drop everything still inside the chest
             if (event.getBlock().getState() instanceof Chest chest) {
@@ -84,24 +98,32 @@ public class OneBlockBreakListener implements Listener {
                 Inventory inventory =
                         chest.getBlockInventory();
 
-                for (ItemStack item : inventory.getContents()) {
+                for (ItemStack item :
+                        inventory.getContents()) {
 
                     if (item == null
                             || item.getType().isAir()) {
                         continue;
                     }
 
-                    event.getBlock()
-                            .getWorld()
-                            .dropItemNaturally(
-                                    event.getBlock().getLocation(),
-                                    item
-                            );
+                    dropControlledItem(
+                            dropLocation,
+                            item
+                    );
                 }
 
                 // Prevent item duplication
                 inventory.clear();
             }
+
+            // Drop the chest itself
+            dropControlledItem(
+                    dropLocation,
+                    new ItemStack(
+                            Material.CHEST,
+                            1
+                    )
+            );
 
             island.setRewardChestActive(false);
 
@@ -111,17 +133,24 @@ public class OneBlockBreakListener implements Listener {
                     );
 
             if (stage == null) {
+
                 event.getPlayer().sendMessage(
                         "Error: This island's stage does not exist."
                 );
+
                 return;
             }
 
             // Generate the next normal block
             Material nextBlock =
-                    stage.getRandomBlock(random);
+                    stage.getRandomBlock(
+                            random
+                    );
 
-            event.getBlock().setType(nextBlock);
+            setOneBlockMaterial(
+                    event.getBlock(),
+                    nextBlock
+            );
 
             islandStorage.saveIsland(island);
             oneBlockBossBar.update(island);
@@ -139,20 +168,52 @@ public class OneBlockBreakListener implements Listener {
                         .getInventory()
                         .getItemInMainHand();
 
+
+        // ---------------------------------------------------------
+        // CALCULATE DROPS
+        // ---------------------------------------------------------
+
+        /*
+         * Do this BEFORE damaging the tool so the current item is
+         * still available for calculating block drops.
+         */
         Collection<ItemStack> drops =
                 event.getBlock().getDrops(
                         tool,
                         event.getPlayer()
                 );
 
+        Location dropLocation =
+                getDropLocation(
+                        event.getBlock()
+                );
+
         for (ItemStack drop : drops) {
 
-            event.getBlock()
-                    .getWorld()
-                    .dropItemNaturally(
-                            event.getBlock().getLocation(),
-                            drop
-                    );
+            dropControlledItem(
+                    dropLocation,
+                    drop
+            );
+        }
+
+
+        // ---------------------------------------------------------
+        // TOOL DURABILITY
+        // ---------------------------------------------------------
+
+        /*
+         * BlockBreakEvent is cancelled, so vanilla Minecraft never
+         * gets a chance to damage the player's tool.
+         *
+         * Paper's damageItemStack() handles durability-related
+         * behavior such as enchantments, events and break animations.
+         */
+        if (!tool.getType().isAir()) {
+
+            event.getPlayer().damageItemStack(
+                    EquipmentSlot.HAND,
+                    1
+            );
         }
 
 
@@ -168,9 +229,11 @@ public class OneBlockBreakListener implements Listener {
                 );
 
         if (stage == null) {
+
             event.getPlayer().sendMessage(
                     "Error: This island's stage does not exist."
             );
+
             return;
         }
 
@@ -187,10 +250,17 @@ public class OneBlockBreakListener implements Listener {
             int nextStageNumber =
                     island.getStage() + 1;
 
-            if (stageManager.hasStage(nextStageNumber)) {
+            if (stageManager.hasStage(
+                    nextStageNumber
+            )) {
 
-                island.setStage(nextStageNumber);
-                island.setProgress(0);
+                island.setStage(
+                        nextStageNumber
+                );
+
+                island.setProgress(
+                        0
+                );
 
                 stage =
                         stageManager.getStage(
@@ -222,10 +292,14 @@ public class OneBlockBreakListener implements Listener {
         // ---------------------------------------------------------
 
         if (!stageChanged
-                && milestoneManager.shouldGenerateChest(island)) {
+                && milestoneManager.shouldGenerateChest(
+                island
+        )) {
 
             event.getBlock()
-                    .setType(Material.CHEST);
+                    .setType(
+                            Material.CHEST
+                    );
 
             if (event.getBlock().getState()
                     instanceof Chest chest) {
@@ -236,14 +310,21 @@ public class OneBlockBreakListener implements Listener {
                 );
             }
 
-            island.setRewardChestActive(true);
+            island.setRewardChestActive(
+                    true
+            );
 
         } else {
 
             Material nextBlock =
-                    stage.getRandomBlock(random);
+                    stage.getRandomBlock(
+                            random
+                    );
 
-            event.getBlock().setType(nextBlock);
+            setOneBlockMaterial(
+                    event.getBlock(),
+                    nextBlock
+            );
         }
 
 
@@ -251,7 +332,86 @@ public class OneBlockBreakListener implements Listener {
         // SAVE + BOSSBAR
         // ---------------------------------------------------------
 
-        islandStorage.saveIsland(island);
-        oneBlockBossBar.update(island);
+        islandStorage.saveIsland(
+                island
+        );
+
+        oneBlockBossBar.update(
+                island
+        );
+    }
+
+
+    // -------------------------------------------------------------
+    // GENERATE ONEBLOCK MATERIAL
+    // -------------------------------------------------------------
+
+    private void setOneBlockMaterial(
+            Block block,
+            Material material
+    ) {
+
+        block.setType(
+                material
+        );
+
+        /*
+         * Plugin-generated leaves would normally behave like
+         * naturally generated leaves and may decay.
+         *
+         * Mark them persistent so the OneBlock cannot disappear.
+         */
+        if (block.getBlockData()
+                instanceof Leaves leaves) {
+
+            leaves.setPersistent(
+                    true
+            );
+
+            block.setBlockData(
+                    leaves
+            );
+        }
+    }
+
+
+    // -------------------------------------------------------------
+    // ITEM DROPS
+    // -------------------------------------------------------------
+
+    private Location getDropLocation(
+            Block block
+    ) {
+
+        return block.getLocation()
+                .add(
+                        0.5,
+                        0.75,
+                        0.5
+                );
+    }
+
+    private void dropControlledItem(
+            Location location,
+            ItemStack itemStack
+    ) {
+
+        Item droppedItem =
+                location.getWorld().dropItem(
+                        location,
+                        itemStack
+                );
+
+        /*
+         * Prevent the normal random outward launch that makes
+         * early-game items fall off the starter platform.
+         */
+        droppedItem.setVelocity(
+                new Vector(
+                        0,
+                        0,
+                        0
+                )
+        );
     }
 }
