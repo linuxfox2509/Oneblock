@@ -76,7 +76,7 @@ public class OneBlockCommand implements CommandExecutor, TabCompleter {
             @NotNull CommandSender sender,
             @NotNull Command command,
             @NotNull String label,
-            @NotNull String[] args
+            String[] args
     ) {
 
         // ---------------------------------------------------------
@@ -1564,7 +1564,7 @@ public class OneBlockCommand implements CommandExecutor, TabCompleter {
             @NotNull CommandSender sender,
             @NotNull Command command,
             @NotNull String alias,
-            @NotNull String[] args
+            String[] args
     ) {
 
         List<String> suggestions =

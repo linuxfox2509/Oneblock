@@ -18,6 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class IslandStorage {
 
@@ -399,13 +400,13 @@ public class IslandStorage {
 
             config.save(file);
 
-        } catch (IOException exception) {
+        }  catch (IOException exception) {
 
-            plugin.getLogger().severe(
-                    "Could not save islands.yml!"
+            plugin.getLogger().log(
+                    Level.SEVERE,
+                    "Could not save islands.yml!",
+                    exception
             );
-
-            exception.printStackTrace();
         }
     }
 }

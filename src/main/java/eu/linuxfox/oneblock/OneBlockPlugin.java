@@ -14,6 +14,7 @@ import eu.linuxfox.oneblock.world.OneBlockWorld;
 import eu.linuxfox.oneblock.island.IslandBiomeService;
 
 import org.bukkit.World;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class OneBlockPlugin extends JavaPlugin {
@@ -123,7 +124,11 @@ public class OneBlockPlugin extends JavaPlugin {
                         oneBlockWorld
                 );
 
+
+        // ---------------------------------------------------------
         // ISLAND BIOMES
+        // ---------------------------------------------------------
+
         islandBiomeService =
                 new IslandBiomeService(
                         this,
@@ -154,11 +159,30 @@ public class OneBlockPlugin extends JavaPlugin {
                         confirmTimeoutMs
                 );
 
-        getCommand("oneblock")
-                .setExecutor(oneBlockCommand);
 
-        getCommand("oneblock")
-                .setTabCompleter(oneBlockCommand);
+        PluginCommand oneBlockPluginCommand =
+                getCommand("oneblock");
+
+        if (oneBlockPluginCommand == null) {
+
+            getLogger().severe(
+                    "Command 'oneblock' is missing from plugin.yml!"
+            );
+
+            getServer()
+                    .getPluginManager()
+                    .disablePlugin(this);
+
+            return;
+        }
+
+        oneBlockPluginCommand.setExecutor(
+                oneBlockCommand
+        );
+
+        oneBlockPluginCommand.setTabCompleter(
+                oneBlockCommand
+        );
 
 
         // ---------------------------------------------------------

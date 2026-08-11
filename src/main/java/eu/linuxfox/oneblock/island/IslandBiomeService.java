@@ -76,22 +76,33 @@ public class IslandBiomeService {
         int maxZ =
                 centerZ + halfSize - 1;
 
-        /*
-         * Align the starting coordinates to biome quart boundaries.
-         */
+
+        // ---------------------------------------------------------
+        // ALIGN TO BIOME QUART BOUNDARIES
+        // ---------------------------------------------------------
+
         int startX =
-                Math.floorDiv(minX, BIOME_STEP)
-                        * BIOME_STEP;
+                Math.floorDiv(
+                        minX,
+                        BIOME_STEP
+                ) * BIOME_STEP;
 
         int startZ =
-                Math.floorDiv(minZ, BIOME_STEP)
-                        * BIOME_STEP;
+                Math.floorDiv(
+                        minZ,
+                        BIOME_STEP
+                ) * BIOME_STEP;
 
         int startY =
                 Math.floorDiv(
                         oneBlockWorld.getMinHeight(),
                         BIOME_STEP
                 ) * BIOME_STEP;
+
+
+        // ---------------------------------------------------------
+        // BIOME CHANGE TASK
+        // ---------------------------------------------------------
 
         new BukkitRunnable() {
 
@@ -106,19 +117,25 @@ public class IslandBiomeService {
 
                 while (operations < OPERATIONS_PER_TICK) {
 
+                    // Entire island area finished
                     if (currentX > maxX) {
 
                         finish();
                         cancel();
+
                         return;
                     }
 
                     /*
-                     * Only write biome quarts that actually overlap
-                     * this island's 500x500 area.
+                     * Only write biome quart positions that are
+                     * actually inside the island's 500x500 area
+                     * and inside the world's vertical bounds.
+                     *
+                     * currentX <= maxX does not need to be checked
+                     * here because the condition above already
+                     * returns as soon as currentX exceeds maxX.
                      */
                     if (currentX >= minX
-                            && currentX <= maxX
                             && currentZ >= minZ
                             && currentZ <= maxZ
                             && currentY >= oneBlockWorld.getMinHeight()
@@ -138,15 +155,18 @@ public class IslandBiomeService {
                 }
             }
 
+
             private void advance() {
 
                 currentY += BIOME_STEP;
 
+                // Finished vertical biome column
                 if (currentY >= oneBlockWorld.getMaxHeight()) {
 
                     currentY = startY;
                     currentZ += BIOME_STEP;
 
+                    // Finished Z row
                     if (currentZ > maxZ) {
 
                         currentZ = startZ;
@@ -154,6 +174,7 @@ public class IslandBiomeService {
                     }
                 }
             }
+
 
             private void finish() {
 
@@ -166,7 +187,9 @@ public class IslandBiomeService {
                         maxZ
                 );
 
-                changingBiomes.remove(position);
+                changingBiomes.remove(
+                        position
+                );
 
                 if (whenFinished != null) {
                     whenFinished.run();
@@ -182,6 +205,7 @@ public class IslandBiomeService {
         return true;
     }
 
+
     private void refreshIslandChunks(
             int minX,
             int maxX,
@@ -190,16 +214,28 @@ public class IslandBiomeService {
     ) {
 
         int minChunkX =
-                Math.floorDiv(minX, 16);
+                Math.floorDiv(
+                        minX,
+                        16
+                );
 
         int maxChunkX =
-                Math.floorDiv(maxX, 16);
+                Math.floorDiv(
+                        maxX,
+                        16
+                );
 
         int minChunkZ =
-                Math.floorDiv(minZ, 16);
+                Math.floorDiv(
+                        minZ,
+                        16
+                );
 
         int maxChunkZ =
-                Math.floorDiv(maxZ, 16);
+                Math.floorDiv(
+                        maxZ,
+                        16
+                );
 
         for (int chunkX = minChunkX;
              chunkX <= maxChunkX;
