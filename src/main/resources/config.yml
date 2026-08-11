@@ -1,0 +1,124 @@
+confirmation:
+  timeout-seconds: 30
+
+progression:
+  base-required: 250
+  multiplier: 1.5
+
+stages:
+  1:
+    name: "Plains"
+
+    blocks:
+      GRASS_BLOCK: 25
+      DIRT: 30
+      STONE: 20
+      OAK_LOG: 10
+      OAK_LEAVES: 10
+      COAL_ORE: 5
+
+    chest:
+      interval: 50
+      rolls: 3
+
+      loot:
+        OAK_SAPLING:
+          weight: 20
+          min: 1
+          max: 3
+
+        APPLE:
+          weight: 15
+          min: 1
+          max: 4
+
+        BONE_MEAL:
+          weight: 10
+          min: 2
+          max: 6
+
+        IRON_INGOT:
+          weight: 5
+          min: 1
+          max: 2
+
+  2:
+    name: "Underground"
+
+    blocks:
+      STONE: 35
+      DEEPSLATE: 20
+      COAL_ORE: 15
+      IRON_ORE: 10
+      COPPER_ORE: 10
+      ANDESITE: 5
+      GRAVEL: 5
+
+    chest:
+      interval: 50
+      rolls: 3
+
+      loot:
+        COAL:
+          weight: 25
+          min: 4
+          max: 12
+
+        IRON_INGOT:
+          weight: 20
+          min: 2
+          max: 6
+
+        TORCH:
+          weight: 15
+          min: 4
+          max: 16
+
+        GOLD_INGOT:
+          weight: 5
+          min: 1
+          max: 3
+
+  3:
+    name: "Caves"
+
+    blocks:
+      STONE: 25
+      DEEPSLATE: 25
+      COAL_ORE: 10
+      IRON_ORE: 15
+      COPPER_ORE: 10
+      GOLD_ORE: 5
+      REDSTONE_ORE: 5
+      LAPIS_ORE: 4
+      DIAMOND_ORE: 1
+
+    chest:
+      interval: 50
+      rolls: 4
+
+      loot:
+        IRON_INGOT:
+          weight: 25
+          min: 3
+          max: 8
+
+        GOLD_INGOT:
+          weight: 15
+          min: 2
+          max: 5
+
+        REDSTONE:
+          weight: 15
+          min: 4
+          max: 16
+
+        LAPIS_LAZULI:
+          weight: 10
+          min: 3
+          max: 10
+
+        DIAMOND:
+          weight: 2
+          min: 1
+          max: 2

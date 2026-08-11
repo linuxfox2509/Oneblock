@@ -1,0 +1,11 @@
+name: OneBlock
+version: 1.0.0
+main: eu.linuxfox.oneblock.OneBlockPlugin
+api-version: '1.21.11'
+author: LinuxFox
+description: A configurable OneBlock plugin for Minecraft 1.21.11
+
+commands:
+  oneblock:
+    description: Main Oneblock command
+    usage: /oneblock
