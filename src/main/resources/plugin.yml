@@ -9,3 +9,43 @@ commands:
   oneblock:
     description: Main Oneblock command
     usage: /oneblock
+
+permissions:
+  oneblock.biome:
+    description: Allows changing an island biome
+    default: op
+
+  oneblock.admin:
+    description: Grants all OneBlock admin permissions
+    default: op
+    children:
+      oneblock.admin.create: true
+      oneblock.admin.delete: true
+      oneblock.admin.set-home: true
+      oneblock.admin.reset-home: true
+      oneblock.admin.set-stage: true
+      oneblock.admin.set-progress: true
+
+  oneblock.admin.create:
+    description: Allows creating islands for players and overriding the clearance check
+    default: false
+
+  oneblock.admin.delete:
+    description: Allows deleting islands
+    default: false
+
+  oneblock.admin.set-home:
+    description: Allows setting another island's home
+    default: false
+
+  oneblock.admin.reset-home:
+    description: Allows resetting another island's home
+    default: false
+
+  oneblock.admin.set-stage:
+    description: Allows changing an island's stage
+    default: false
+
+  oneblock.admin.set-progress:
+    description: Allows changing an island's progress
+    default: false

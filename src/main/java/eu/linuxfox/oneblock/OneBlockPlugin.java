@@ -210,7 +210,8 @@ public class OneBlockPlugin extends JavaPlugin {
                         new PlayerJoinListener(
                                 islandManager,
                                 islandStorage,
-                                oneBlockBossBar
+                                oneBlockBossBar,
+                                oneBlockWorld
                         ),
                         this
                 );

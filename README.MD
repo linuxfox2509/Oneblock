@@ -20,10 +20,12 @@ Each player can create their own island in a shared void world. Breaking the cen
 - Configurable confirmation timeout
 - Offline player support for island information
 - Admin island management
+- Granular admin permissions
 - Per-island biome selection
 - Persistent island data
 - Tab completion
 - Void world generation
+- Automatic teleport to the normal world spawn when joining
 
 ## Requirements
 
@@ -50,27 +52,51 @@ The plugin is built against the Paper API and is intended for Paper servers.
 | `/oneblock create` | Create your island |
 | `/oneblock delete` | Request deletion of your island |
 | `/oneblock confirm` | Confirm a pending action |
-| `/oneblock home` | Teleport to your island |
+| `/oneblock home` | Teleport to your island home |
 | `/oneblock set-home` | Set your island home |
 | `/oneblock reset-home` | Reset your island home |
 | `/oneblock info [player]` | Show information about an island |
 | `/oneblock visit <player>` | Visit another player's island |
 
-### Operator Commands
+### Biome Commands
 
-The following commands require operator privileges.
+Biome commands require the `oneblock.biome` permission.
 
 | Command | Description |
 |---|---|
 | `/oneblock biome` | Show your island's biome |
 | `/oneblock biome <biome>` | Change your island's biome |
 | `/oneblock biome reset` | Reset your island biome to Plains |
-| `/oneblock admin create <X> <Z> <player> [force]` | Create an island at a specific grid position |
-| `/oneblock admin delete <X> <Z>` | Delete an island |
-| `/oneblock admin set-stage <X> <Z> <stage>` | Change an island's stage |
-| `/oneblock admin set-progress <X> <Z> <progress>` | Change an island's progress |
 
-Additional admin commands may be available depending on the version.
+### Admin Commands
+
+Admin commands use individual permission nodes, allowing server administrators to control access to each action separately.
+
+| Command | Permission | Description |
+|---|---|---|
+| `/oneblock admin create <X> <Z> <player> [force]` | `oneblock.admin.create` | Create an island at a specific grid position |
+| `/oneblock admin delete <X> <Z>` | `oneblock.admin.delete` | Delete an island |
+| `/oneblock admin set-home <X> <Z>` | `oneblock.admin.set-home` | Set an island's home to your current location |
+| `/oneblock admin reset-home <X> <Z>` | `oneblock.admin.reset-home` | Reset an island's home to its OneBlock |
+| `/oneblock admin set-stage <X> <Z> <stage>` | `oneblock.admin.set-stage` | Change an island's stage |
+| `/oneblock admin set-progress <X> <Z> <progress>` | `oneblock.admin.set-progress` | Change an island's progress |
+
+## Permissions
+
+| Permission | Default | Description |
+|---|---|---|
+| `oneblock.biome` | OP | Allows changing an island biome |
+| `oneblock.admin` | OP | Grants all OneBlock admin permissions |
+| `oneblock.admin.create` | False | Allows creating islands for players, including use of the `force` option |
+| `oneblock.admin.delete` | False | Allows deleting islands |
+| `oneblock.admin.set-home` | False | Allows setting another island's home |
+| `oneblock.admin.reset-home` | False | Allows resetting another island's home |
+| `oneblock.admin.set-stage` | False | Allows changing an island's stage |
+| `oneblock.admin.set-progress` | False | Allows changing an island's progress |
+
+Operators receive `oneblock.biome` and `oneblock.admin` by default. The `oneblock.admin` permission grants all individual admin permissions through child permissions.
+
+Individual permissions can be granted or denied using a permissions plugin.
 
 ## Progression
 
@@ -119,7 +145,12 @@ stages:
 
 Progression can generate reward chests containing configurable loot.
 
-Reward chests temporarily replace the OneBlock. When the chest is broken, its remaining contents are dropped and normal OneBlock generation continues.
+Reward chests temporarily replace the OneBlock. When a reward chest is broken:
+
+- Its remaining contents are dropped.
+- The chest itself is dropped.
+- Normal OneBlock generation continues.
+- Breaking the reward chest does not increase island progress.
 
 Milestones and their loot can be configured in `config.yml`.
 
@@ -137,6 +168,12 @@ Z: 0
 
 Additional islands are allocated around the origin.
 
+Players are sent to the normal world spawn when they join the server. They can return to their island using:
+
+```text
+/oneblock home
+```
+
 Island information and progression are stored in:
 
 ```text
@@ -146,6 +183,7 @@ plugins/OneBlock/islands.yml
 This includes information such as:
 
 - Owner
+- Owner name
 - Grid position
 - Stage
 - Progress
@@ -155,7 +193,7 @@ This includes information such as:
 
 ## Biomes
 
-Operators can change the biome of their island:
+Players with the `oneblock.biome` permission can change the biome of their island:
 
 ```text
 /oneblock biome desert
@@ -171,16 +209,49 @@ Biome changes are processed over multiple server ticks to avoid performing the e
 
 ## Island Deletion
 
-Island deletion requires confirmation:
+Players can delete their own island using:
 
 ```text
 /oneblock delete
 /oneblock confirm
 ```
 
-The amount of time a player has to confirm the action can be configured in `config.yml`.
+Administrators with the required permission can request deletion of an island at a specific grid position:
+
+```text
+/oneblock admin delete <X> <Z>
+/oneblock confirm
+```
+
+The amount of time available to confirm an action can be configured in `config.yml`.
 
 Island deletion removes the island area and releases its grid position so that it can be used again.
+
+## Configuration
+
+The default configuration is located at:
+
+```text
+src/main/resources/config.yml
+```
+
+When the plugin is first started, it is copied to:
+
+```text
+plugins/OneBlock/config.yml
+```
+
+The configuration controls features such as:
+
+- Confirmation timeout
+- Progression requirements
+- Stage names
+- Block pools and weights
+- Reward chest intervals
+- Reward chest rolls
+- Reward chest loot
+
+Restart the server after making configuration changes unless otherwise specified.
 
 ## Building
 
@@ -216,7 +287,7 @@ build/libs/
 The project uses:
 
 - Java 21
-- Gradle
+- Gradle with Kotlin DSL
 - Paper API 1.21.11
 
 Project structure:
@@ -225,6 +296,8 @@ Project structure:
 src/main/java/eu/linuxfox/oneblock/
 ├── bossbar/
 ├── command/
+│   └── subcommand/
+│       └── admin/
 ├── island/
 ├── listener/
 ├── progression/
@@ -236,22 +309,6 @@ src/main/resources/
 ├── config.yml
 └── plugin.yml
 ```
-
-## Configuration
-
-The default configuration is located at:
-
-```text
-src/main/resources/config.yml
-```
-
-When the plugin is first started, it is copied to:
-
-```text
-plugins/OneBlock/config.yml
-```
-
-Restart the server after making configuration changes unless otherwise specified.
 
 ## License
 
